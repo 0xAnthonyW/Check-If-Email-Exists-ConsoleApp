@@ -19,8 +19,14 @@ A simple C# console application that checks if an email address exists using the
 
 - [.NET 8 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
 - [Docker](https://www.docker.com/)
+- [check-if-email-exists](https://github.com/reacherhq/check-if-email-exists)
 
-## Build instructions 
+## ⬇️ Download
+Latest EmailVerifier-Release.zip built with github actions 😊
+https://github.com/0xAnthonyW/Check-If-Email-Exists-ConsoleApp/releases
+
+
+## Developer Build instructions 
 
 ### 1. Clone the Repository
 
