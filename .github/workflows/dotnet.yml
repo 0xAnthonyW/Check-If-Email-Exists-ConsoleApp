@@ -16,7 +16,8 @@ jobs:
         configuration: [Release]
 
     env:
-      Project_Path: EmailVerifierConsole.csproj
+      Solution_Name: Check-If-Email-Exists-ConsoleApp.sln
+      Project_Path: Check-If-Email-Exists-ConsoleApp/Check-If-Email-Exists-ConsoleApp.csproj
       Publish_Directory: ./publish/${{ matrix.configuration }}
 
     steps:
@@ -29,10 +30,10 @@ jobs:
         dotnet-version: '8.0.x'
 
     - name: Restore Dependencies
-      run: dotnet restore ${{ env.Project_Path }}
+      run: dotnet restore ${{ env.Solution_Name }}
 
     - name: Build App
-      run: dotnet build ${{ env.Project_Path }} --configuration ${{ matrix.configuration }}
+      run: dotnet build ${{ env.Solution_Name }} --configuration ${{ matrix.configuration }}
 
     - name: Publish App
       run: dotnet publish ${{ env.Project_Path }} --configuration ${{ matrix.configuration }} -r win-x64 -p:PublishSingleFile=true --self-contained true --output ${{ env.Publish_Directory }}
