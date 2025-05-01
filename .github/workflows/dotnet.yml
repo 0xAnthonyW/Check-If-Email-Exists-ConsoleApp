@@ -1,39 +1,62 @@
-name: Build and Release .NET 8 Console App
+name: .NET Console CI/CD
 
 on:
   push:
     branches: [ "master" ]
-    tags:
-      - 'v*'
+
+permissions:
+  contents: write
+  actions: read
 
 jobs:
-  build:
+  build-and-release:
     runs-on: windows-latest
+    strategy:
+      matrix:
+        configuration: [Release]
+
+    env:
+      Project_Path: EmailVerifierConsole.csproj
+      Publish_Directory: ./publish/${{ matrix.configuration }}
 
     steps:
-    - name: Checkout repository
+    - name: Checkout Code
       uses: actions/checkout@v4
 
     - name: Setup .NET SDK
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: '8.0.x'
 
-    - name: Restore dependencies
-      run: dotnet restore
+    - name: Restore Dependencies
+      run: dotnet restore ${{ env.Project_Path }}
 
-    - name: Build project
-      run: dotnet build --configuration Release
+    - name: Build App
+      run: dotnet build ${{ env.Project_Path }} --configuration ${{ matrix.configuration }}
 
-    - name: Publish executable
-      run: dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true --self-contained true -o ./publish
+    - name: Publish App
+      run: dotnet publish ${{ env.Project_Path }} --configuration ${{ matrix.configuration }} -r win-x64 -p:PublishSingleFile=true --self-contained true --output ${{ env.Publish_Directory }}
 
-    - name: Zip published output
-      run: Compress-Archive -Path ./publish/* -DestinationPath ./CheckIfEmailExists.zip
+    - name: Package Application
+      run: Compress-Archive -Path ${{ env.Publish_Directory }}/* -DestinationPath ./EmailVerifier-${{ matrix.configuration }}.zip
 
     - name: Create GitHub Release
-      uses: softprops/action-gh-release@v2
-      with:
-        files: ./CheckIfEmailExists.zip
+      id: create_release
+      uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: release-${{ github.run_number }}-${{ matrix.configuration }}-${{ github.sha }}
+        release_name: Email Verifier Release ${{ github.run_number }} (${{ matrix.configuration }})
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./EmailVerifier-${{ matrix.configuration }}.zip
+        asset_name: EmailVerifier-${{ matrix.configuration }}.zip
+        asset_content_type: application/zip
