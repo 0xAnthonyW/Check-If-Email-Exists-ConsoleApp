@@ -1,10 +1,9 @@
-name: Build .NET 8 Console App
+name: Build and Release .NET 8 Console App
 
 on:
   push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    tags:
+      - 'v*'
 
 jobs:
   build:
@@ -26,10 +25,14 @@ jobs:
       run: dotnet build --configuration Release
 
     - name: Publish executable
-      run: dotnet publish -c Release -o ./publish
+      run: dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true --self-contained true -o ./publish
 
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
+    - name: Zip published output
+      run: Compress-Archive -Path ./publish/* -DestinationPath ./CheckIfEmailExists.zip
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
       with:
-        name: Published Console App
-        path: ./publish
+        files: ./CheckIfEmailExists.zip
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
